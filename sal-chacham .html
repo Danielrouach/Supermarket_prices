@@ -1,0 +1,1461 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title>🛒 סל חכם - השוואת מחירים</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --green: #00c853;
+    --green-dark: #009624;
+    --green-light: #b9f6ca;
+    --blue: #1565c0;
+    --blue-light: #e3f2fd;
+    --orange: #ff6d00;
+    --orange-light: #fff3e0;
+    --red: #d32f2f;
+    --gray-50: #fafafa;
+    --gray-100: #f5f5f5;
+    --gray-200: #eeeeee;
+    --gray-300: #e0e0e0;
+    --gray-500: #9e9e9e;
+    --gray-700: #616161;
+    --gray-900: #212121;
+    --white: #ffffff;
+    --shadow-sm: 0 1px 3px rgba(0,0,0,0.12);
+    --shadow-md: 0 4px 12px rgba(0,0,0,0.10);
+    --shadow-lg: 0 8px 32px rgba(0,0,0,0.12);
+    --radius: 16px;
+    --radius-sm: 8px;
+    --radius-full: 9999px;
+  }
+
+  html { font-size: 16px; }
+  body {
+    font-family: 'Heebo', sans-serif;
+    background: var(--gray-100);
+    color: var(--gray-900);
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* App Shell */
+  #app { max-width: 480px; margin: 0 auto; min-height: 100vh; background: var(--white); position: relative; }
+
+  /* Header */
+  .header {
+    background: linear-gradient(135deg, #00c853 0%, #1565c0 100%);
+    padding: 20px 16px 16px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+  }
+  .header-top { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+  .header-logo { font-size: 28px; }
+  .header-title { color: white; font-weight: 800; font-size: 20px; line-height: 1.2; }
+  .header-subtitle { color: rgba(255,255,255,0.85); font-size: 12px; font-weight: 400; }
+
+  /* Search Bar */
+  .search-wrap { position: relative; }
+  .search-input {
+    width: 100%;
+    padding: 12px 44px 12px 44px;
+    border-radius: var(--radius-full);
+    border: none;
+    background: rgba(255,255,255,0.95);
+    font-family: 'Heebo', sans-serif;
+    font-size: 15px;
+    color: var(--gray-900);
+    outline: none;
+    box-shadow: var(--shadow-sm);
+  }
+  .search-input::placeholder { color: var(--gray-500); }
+  .search-icon { position: absolute; right: 14px; top: 50%; transform: translateY(-50%); color: var(--gray-500); font-size: 18px; pointer-events: none; }
+  .barcode-btn {
+    position: absolute; left: 12px; top: 50%; transform: translateY(-50%);
+    background: none; border: none; cursor: pointer; font-size: 20px; padding: 2px;
+  }
+
+  /* Tabs */
+  .tabs {
+    display: flex;
+    background: var(--white);
+    border-bottom: 2px solid var(--gray-200);
+    position: sticky;
+    top: 110px;
+    z-index: 90;
+  }
+  .tab {
+    flex: 1; padding: 12px 8px; text-align: center; background: none; border: none;
+    font-family: 'Heebo', sans-serif; font-size: 13px; font-weight: 600;
+    color: var(--gray-500); cursor: pointer; position: relative; transition: color 0.2s;
+  }
+  .tab.active { color: var(--green-dark); }
+  .tab.active::after {
+    content: ''; position: absolute; bottom: -2px; left: 0; right: 0;
+    height: 2px; background: var(--green-dark);
+  }
+  .tab-icon { font-size: 16px; display: block; margin-bottom: 2px; }
+
+  /* Content */
+  .content { padding: 16px; padding-bottom: 80px; }
+
+  /* Region Select */
+  .region-card {
+    background: var(--blue-light);
+    border-radius: var(--radius);
+    padding: 14px 16px;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .region-label { font-size: 12px; color: var(--blue); font-weight: 600; white-space: nowrap; }
+  .region-select {
+    flex: 1; background: white; border: 1.5px solid var(--blue); border-radius: var(--radius-full);
+    padding: 6px 12px; font-family: 'Heebo', sans-serif; font-size: 14px; font-weight: 600;
+    color: var(--blue); outline: none; cursor: pointer;
+  }
+
+  /* Search Results */
+  .search-results {
+    background: var(--white);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-md);
+    overflow: hidden;
+    margin-bottom: 16px;
+  }
+  .result-item {
+    display: flex; align-items: center; padding: 12px 16px; gap: 12px;
+    border-bottom: 1px solid var(--gray-100); cursor: pointer; transition: background 0.15s;
+  }
+  .result-item:last-child { border-bottom: none; }
+  .result-item:hover { background: var(--gray-50); }
+  .result-emoji { font-size: 28px; width: 40px; text-align: center; flex-shrink: 0; }
+  .result-info { flex: 1; min-width: 0; }
+  .result-name { font-size: 14px; font-weight: 600; color: var(--gray-900); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .result-meta { font-size: 12px; color: var(--gray-500); margin-top: 2px; }
+  .result-barcode { font-size: 11px; color: var(--gray-500); font-family: monospace; }
+  .add-btn {
+    background: var(--green); color: white; border: none; border-radius: var(--radius-full);
+    width: 32px; height: 32px; font-size: 20px; cursor: pointer; display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; font-weight: 700; transition: background 0.15s;
+  }
+  .add-btn:hover { background: var(--green-dark); }
+
+  /* Availability badges */
+  .badge-wrap { display: flex; gap: 4px; margin-top: 4px; flex-wrap: wrap; }
+  .badge {
+    font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: var(--radius-full);
+    letter-spacing: 0.3px;
+  }
+  .badge-rami { background: #e8f5e9; color: #2e7d32; }
+  .badge-osher { background: #e3f2fd; color: #1565c0; }
+  .badge-only { background: #fff3e0; color: #e65100; }
+
+  /* Cart */
+  .cart-item {
+    background: var(--white);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-sm);
+    padding: 12px 16px;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    border: 1.5px solid var(--gray-200);
+    position: relative;
+  }
+  .cart-item.only-one { border-color: var(--orange); }
+  .cart-emoji { font-size: 26px; width: 38px; text-align: center; flex-shrink: 0; }
+  .cart-info { flex: 1; min-width: 0; }
+  .cart-name { font-size: 14px; font-weight: 600; color: var(--gray-900); margin-bottom: 4px; }
+  .cart-prices { display: flex; gap: 10px; align-items: center; }
+  .price-tag {
+    font-size: 13px; font-weight: 700; padding: 3px 10px; border-radius: var(--radius-full);
+  }
+  .price-rami { background: #e8f5e9; color: #2e7d32; }
+  .price-osher { background: #e3f2fd; color: #1565c0; }
+  .price-na { background: var(--gray-200); color: var(--gray-500); }
+  .price-best { outline: 2px solid currentColor; }
+  .remove-btn {
+    background: none; border: none; cursor: pointer; font-size: 18px; color: var(--gray-400);
+    padding: 4px; transition: color 0.15s; flex-shrink: 0;
+  }
+  .remove-btn:hover { color: var(--red); }
+  .only-badge {
+    position: absolute; top: -8px; right: 12px;
+    background: var(--orange); color: white; font-size: 10px; font-weight: 700;
+    padding: 2px 10px; border-radius: var(--radius-full);
+  }
+  .qty-wrap { display: flex; align-items: center; gap: 6px; }
+  .qty-btn {
+    background: var(--gray-200); border: none; border-radius: 50%; width: 24px; height: 24px;
+    font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center;
+    font-weight: 700; color: var(--gray-700); transition: background 0.15s;
+  }
+  .qty-btn:hover { background: var(--gray-300); }
+  .qty-num { font-size: 14px; font-weight: 700; min-width: 20px; text-align: center; }
+
+  /* Summary Card */
+  .summary-card {
+    background: linear-gradient(135deg, #e8f5e9 0%, #e3f2fd 100%);
+    border-radius: var(--radius);
+    padding: 20px;
+    margin-bottom: 16px;
+    box-shadow: var(--shadow-md);
+  }
+  .summary-title { font-size: 16px; font-weight: 800; color: var(--gray-900); margin-bottom: 16px; }
+  .summary-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+  .summary-store { display: flex; align-items: center; gap: 10px; }
+  .store-icon { font-size: 24px; }
+  .store-name { font-weight: 700; font-size: 15px; }
+  .store-sub { font-size: 11px; color: var(--gray-500); }
+  .total-price { font-size: 22px; font-weight: 900; }
+  .total-rami { color: #2e7d32; }
+  .total-osher { color: #1565c0; }
+  .winner-banner {
+    background: var(--green);
+    color: white;
+    border-radius: var(--radius-sm);
+    padding: 10px 16px;
+    text-align: center;
+    font-weight: 700;
+    font-size: 14px;
+    margin-top: 12px;
+  }
+  .savings { font-size: 12px; margin-top: 2px; opacity: 0.9; }
+  .divider { height: 1px; background: rgba(0,0,0,0.08); margin: 12px 0; }
+
+  /* Empty state */
+  .empty-state { text-align: center; padding: 48px 24px; }
+  .empty-emoji { font-size: 64px; margin-bottom: 16px; }
+  .empty-title { font-size: 18px; font-weight: 700; color: var(--gray-700); margin-bottom: 8px; }
+  .empty-text { font-size: 14px; color: var(--gray-500); line-height: 1.5; }
+
+  /* Toast */
+  .toast-container { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 9999; pointer-events: none; width: 90%; max-width: 400px; }
+  .toast {
+    background: var(--gray-900); color: white; padding: 12px 18px; border-radius: var(--radius);
+    margin-bottom: 8px; font-size: 13px; font-weight: 500; box-shadow: var(--shadow-lg);
+    animation: slideIn 0.3s ease, fadeOut 0.3s ease 2.7s forwards;
+    display: flex; align-items: flex-start; gap: 10px; line-height: 1.4;
+  }
+  .toast.warning { background: var(--orange); }
+  .toast.success { background: var(--green-dark); }
+  .toast-icon { font-size: 18px; flex-shrink: 0; margin-top: 1px; }
+  @keyframes slideIn { from { opacity:0; transform:translateY(-20px); } to { opacity:1; transform:translateY(0); } }
+  @keyframes fadeOut { from { opacity:1; } to { opacity:0; } }
+
+  /* AI Suggestion */
+  .ai-suggestion {
+    background: linear-gradient(135deg, #fff3e0, #ffe0b2);
+    border: 1.5px solid var(--orange);
+    border-radius: var(--radius);
+    padding: 14px 16px;
+    margin-bottom: 10px;
+  }
+  .ai-header { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+  .ai-title { font-size: 13px; font-weight: 700; color: var(--orange); }
+  .ai-text { font-size: 13px; color: var(--gray-700); line-height: 1.5; margin-bottom: 10px; }
+  .ai-accept-btn {
+    background: var(--orange); color: white; border: none; border-radius: var(--radius-full);
+    padding: 8px 20px; font-family: 'Heebo', sans-serif; font-size: 13px; font-weight: 700;
+    cursor: pointer; transition: background 0.15s;
+  }
+  .ai-accept-btn:hover { background: #e65100; }
+  .ai-dismiss { background: none; border: none; font-size: 18px; cursor: pointer; color: var(--gray-500); margin-right: auto; }
+
+  /* Modal */
+  .modal-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1000;
+    display: flex; align-items: flex-end; justify-content: center;
+    animation: fadeIn 0.2s ease;
+  }
+  .modal {
+    background: white; border-radius: 24px 24px 0 0; padding: 24px 20px;
+    width: 100%; max-width: 480px; max-height: 85vh; overflow-y: auto;
+    animation: slideUp 0.3s ease;
+  }
+  @keyframes fadeIn { from { opacity:0 } to { opacity:1 } }
+  @keyframes slideUp { from { transform:translateY(100%) } to { transform:translateY(0) } }
+  .modal-handle { width: 40px; height: 4px; background: var(--gray-300); border-radius: 2px; margin: 0 auto 20px; }
+  .modal-title { font-size: 18px; font-weight: 800; margin-bottom: 16px; color: var(--gray-900); }
+  .modal-close { background: var(--gray-200); border: none; border-radius: 50%; width: 32px; height: 32px; font-size: 18px; cursor: pointer; float: left; }
+
+  /* Scanner overlay */
+  .scanner-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 2000;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; color: white;
+  }
+  .scanner-frame {
+    width: 280px; height: 180px; border: 3px solid var(--green);
+    border-radius: 16px; position: relative; margin-bottom: 24px;
+  }
+  .scanner-line {
+    position: absolute; top: 0; left: 0; right: 0; height: 2px;
+    background: var(--green); animation: scan 2s ease-in-out infinite;
+    box-shadow: 0 0 8px var(--green);
+  }
+  @keyframes scan { 0%,100% { top:0 } 50% { top:calc(100% - 2px) } }
+  .scanner-text { font-size: 16px; font-weight: 600; margin-bottom: 8px; }
+  .scanner-sub { font-size: 13px; color: rgba(255,255,255,0.7); margin-bottom: 24px; }
+  .scanner-input-wrap { display: flex; gap: 8px; width: 90%; max-width: 320px; }
+  .scanner-input {
+    flex: 1; background: rgba(255,255,255,0.15); border: 1.5px solid rgba(255,255,255,0.3);
+    border-radius: var(--radius-full); padding: 12px 16px; color: white; font-family: 'Heebo', sans-serif;
+    font-size: 16px; outline: none; text-align: center; letter-spacing: 2px;
+  }
+  .scanner-input::placeholder { color: rgba(255,255,255,0.4); letter-spacing: 0; }
+  .scanner-submit {
+    background: var(--green); color: white; border: none; border-radius: var(--radius-full);
+    padding: 12px 20px; font-family: 'Heebo', sans-serif; font-size: 15px; font-weight: 700; cursor: pointer;
+  }
+  .scanner-close {
+    position: absolute; top: 20px; left: 20px; background: rgba(255,255,255,0.15);
+    border: none; color: white; border-radius: 50%; width: 40px; height: 40px;
+    font-size: 20px; cursor: pointer; display: flex; align-items: center; justify-content: center;
+  }
+
+  /* Categories */
+  .cat-scroll { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 8px; margin-bottom: 16px; scrollbar-width: none; }
+  .cat-scroll::-webkit-scrollbar { display: none; }
+  .cat-chip {
+    white-space: nowrap; background: var(--gray-100); border: 1.5px solid var(--gray-200);
+    border-radius: var(--radius-full); padding: 6px 14px; font-family: 'Heebo', sans-serif;
+    font-size: 13px; font-weight: 600; color: var(--gray-700); cursor: pointer; transition: all 0.15s;
+  }
+  .cat-chip.active { background: var(--green); border-color: var(--green); color: white; }
+
+  /* Barcode input row */
+  .barcode-row { display: flex; gap: 8px; margin-bottom: 16px; }
+  .barcode-field {
+    flex: 1; padding: 11px 14px; border: 1.5px solid var(--gray-300); border-radius: var(--radius-full);
+    font-family: 'Heebo', sans-serif; font-size: 14px; outline: none; letter-spacing: 1px;
+    color: var(--gray-900);
+  }
+  .barcode-field:focus { border-color: var(--green); }
+  .barcode-go {
+    background: var(--green); color: white; border: none; border-radius: var(--radius-full);
+    padding: 11px 20px; font-family: 'Heebo', sans-serif; font-size: 14px; font-weight: 700; cursor: pointer;
+  }
+
+  /* Floating cart button */
+  .cart-fab {
+    position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+    background: var(--green); color: white; border: none; border-radius: var(--radius-full);
+    padding: 14px 28px; font-family: 'Heebo', sans-serif; font-size: 15px; font-weight: 700;
+    cursor: pointer; box-shadow: 0 4px 20px rgba(0,200,83,0.4); display: flex; align-items: center; gap: 8px;
+    z-index: 80; transition: transform 0.15s, box-shadow 0.15s;
+  }
+  .cart-fab:hover { transform: translateX(-50%) scale(1.04); }
+  .cart-count {
+    background: white; color: var(--green-dark); border-radius: 50%; width: 22px; height: 22px;
+    font-size: 12px; font-weight: 900; display: flex; align-items: center; justify-content: center;
+  }
+
+  .no-results { text-align: center; padding: 32px; color: var(--gray-500); font-size: 14px; }
+
+  /* Loading */
+  .loading { text-align: center; padding: 24px; }
+  .spinner { display: inline-block; width: 32px; height: 32px; border: 3px solid var(--gray-200); border-top-color: var(--green); border-radius: 50%; animation: spin 0.8s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* Smart Search Autocomplete */
+  .smart-search-wrap { position: relative; }
+  .autocomplete-dropdown {
+    position: absolute; top: calc(100% + 6px); left: 0; right: 0;
+    background: white; border-radius: var(--radius); box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+    z-index: 200; overflow: hidden; border: 1.5px solid var(--gray-200);
+    max-height: 380px; overflow-y: auto;
+  }
+  .autocomplete-header {
+    padding: 7px 14px; font-size: 11px; font-weight: 700; color: var(--gray-500);
+    background: var(--gray-50); border-bottom: 1px solid var(--gray-100);
+    letter-spacing: 0.5px;
+  }
+  .autocomplete-item {
+    display: flex; align-items: center; padding: 9px 12px; gap: 10px;
+    cursor: pointer; transition: background 0.12s; border-bottom: 1px solid var(--gray-100);
+  }
+  .autocomplete-item:last-child { border-bottom: none; }
+  .autocomplete-item:hover { background: var(--gray-50); }
+  .autocomplete-item.highlighted { background: #e8f5e9; }
+  .ac-img { width: 40px; height: 40px; border-radius: 8px; background: var(--gray-100); flex-shrink:0; display:flex; align-items:center; justify-content:center; overflow:hidden; }
+  .ac-img img { width:100%; height:100%; object-fit:contain; }
+  .ac-info { flex:1; min-width:0; }
+  .ac-name { font-size: 13px; font-weight: 600; color: var(--gray-900); line-height:1.3; }
+  .ac-name mark { background: #fff176; color: var(--gray-900); border-radius: 2px; padding: 0 1px; font-weight:800; font-style:normal; }
+  .ac-meta { display:flex; gap:5px; margin-top:3px; flex-wrap:wrap; align-items:center; }
+  .ac-cat { font-size: 11px; color: var(--gray-500); }
+  .ac-price-rami { font-size: 11px; font-weight: 700; color: #2e7d32; background: #e8f5e9; padding: 1px 7px; border-radius: 10px; }
+  .ac-price-osher { font-size: 11px; font-weight: 700; color: #1565c0; background: #e3f2fd; padding: 1px 7px; border-radius: 10px; }
+  .ac-only { font-size: 10px; font-weight: 700; color: #e65100; background: #fff3e0; padding: 1px 7px; border-radius: 10px; }
+  .ac-add { background: var(--green); color:white; border:none; border-radius: var(--radius-full); width:30px; height:30px; font-size:20px; cursor:pointer; display:flex; align-items:center; justify-content:center; flex-shrink:0; font-weight:700; transition: background 0.15s; }
+  .ac-add:hover { background: var(--green-dark); }
+  .ac-no-results { padding: 20px; text-align:center; color: var(--gray-500); font-size:13px; }
+  .match-highlight mark { background: #fff176; border-radius: 2px; padding: 0 1px; font-weight: 800; font-style: normal; }
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="root"></div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
+<script src="https://unpkg.com/@zxing/library@0.19.1/umd/index.min.js"></script>
+
+<script type="text/babel">
+const { useState, useEffect, useRef, useCallback } = React;
+
+// ====== DATA ======
+const products = [
+  { barcode: "7290000066690", name: "חלב תנובה 3% 1 ליטר", category: "חלב ומוצרי חלב", image: "🥛" },
+  { barcode: "7290000066683", name: "חלב תנובה 1% 1 ליטר", category: "חלב ומוצרי חלב", image: "🥛" },
+  { barcode: "7290000066720", name: "חלב תנובה 3% 2 ליטר", category: "חלב ומוצרי חלב", image: "🥛" },
+  { barcode: "7290000066744", name: "גבינה לבנה תנובה 5%", category: "חלב ומוצרי חלב", image: "🧀" },
+  { barcode: "7290000066751", name: "קוטג' תנובה 5%", category: "חלב ומוצרי חלב", image: "🥛" },
+  { barcode: "7290000066737", name: "שמנת חמוצה תנובה 15%", category: "חלב ומוצרי חלב", image: "🥛" },
+  { barcode: "7290000099131", name: "חמאה תנובה 100g", category: "חלב ומוצרי חלב", image: "🧈" },
+  { barcode: "7290002069403", name: "גבינה צהובה עמק פרוסות 200g", category: "חלב ומוצרי חלב", image: "🧀" },
+  { barcode: "7290104906107", name: "יוגורט תנובה 1.5% תות 150g", category: "חלב ומוצרי חלב", image: "🥛" },
+  { barcode: "7290000268742", name: "לחם אחיד 750g", category: "לחם ומאפים", image: "🍞" },
+  { barcode: "7290000268759", name: "לחם שיפון 500g", category: "לחם ומאפים", image: "🍞" },
+  { barcode: "7290010928888", name: "פיתות 5 יח'", category: "לחם ומאפים", image: "🫓" },
+  { barcode: "7290010928895", name: "לחמניות שטיבל 6 יח'", category: "לחם ומאפים", image: "🍞" },
+  { barcode: "7290000081597", name: "ביצים L 12 יח'", category: "ביצים", image: "🥚" },
+  { barcode: "7290000081580", name: "ביצים M 12 יח'", category: "ביצים", image: "🥚" },
+  { barcode: "7290000064139", name: "שמן קנולה 1 ליטר", category: "שמנים", image: "🫙" },
+  { barcode: "7290000064146", name: "שמן זית כתית 750ml", category: "שמנים", image: "🫒" },
+  { barcode: "7290000064153", name: "סוכר לבן 1 ק\"ג", category: "סוכר וקמח", image: "🫙" },
+  { barcode: "7290000064160", name: "קמח לבן 1 ק\"ג", category: "סוכר וקמח", image: "🌾" },
+  { barcode: "7290000064177", name: "אורז בסמטי 1 ק\"ג", category: "דגנים", image: "🍚" },
+  { barcode: "7290000064184", name: "פסטה ספגטי 500g", category: "דגנים", image: "🍝" },
+  { barcode: "7290001257397", name: "מלח שולחן 500g", category: "תבלינים", image: "🧂" },
+  { barcode: "7290000051079", name: "עגבניות מרוסקות אמבה 400g", category: "שימורים", image: "🥫" },
+  { barcode: "7290000051086", name: "חצי גזר שימורים 560g", category: "שימורים", image: "🥫" },
+  { barcode: "7290000051093", name: "תירס שימורים 340g", category: "שימורים", image: "🥫" },
+  { barcode: "7290011592476", name: "טונה בשמן אמבה 160g", category: "שימורים", image: "🐟" },
+  { barcode: "7290011592483", name: "שעועית לבנה שימורים 400g", category: "שימורים", image: "🥫" },
+  { barcode: "7290011592490", name: "גרגירי חומוס שימורים 400g", category: "שימורים", image: "🫘" },
+  { barcode: "7290000857687", name: "קולה קוקה 1.5 ליטר", category: "שתייה", image: "🥤" },
+  { barcode: "7290000857694", name: "קולה קוקה זירו 1.5 ליטר", category: "שתייה", image: "🥤" },
+  { barcode: "7290000857700", name: "ספרייט 1.5 ליטר", category: "שתייה", image: "🥤" },
+  { barcode: "7290013560003", name: "מי עדן 1.5 ליטר", category: "שתייה", image: "💧" },
+  { barcode: "7290013560010", name: "מי עדן 6 בקבוקים 0.5 ליטר", category: "שתייה", image: "💧" },
+  { barcode: "7290000857717", name: "נקטר תפוז נשר 1 ליטר", category: "שתייה", image: "🍊" },
+  { barcode: "7290000071007", name: "ביסלי גריל 75g", category: "חטיפים", image: "🍿" },
+  { barcode: "7290000071014", name: "ביסלי בצל 75g", category: "חטיפים", image: "🍿" },
+  { barcode: "7290000068021", name: "במבה 80g", category: "חטיפים", image: "🍿" },
+  { barcode: "7290000068007", name: "שוקולד עלית מרקה 100g", category: "ממתקים", image: "🍫" },
+  { barcode: "7290000068014", name: "שוקולד עלית מוס 100g", category: "ממתקים", image: "🍫" },
+  { barcode: "7290000093058", name: "נס קפה קלאסי 200g", category: "קפה ותה", image: "☕" },
+  { barcode: "7290000093065", name: "נס קפה גולד 200g", category: "קפה ותה", image: "☕" },
+  { barcode: "7290000093072", name: "תה ויסוצקי שחור 100 שקיות", category: "קפה ותה", image: "🫖" },
+  { barcode: "7290000055855", name: "סבון כלים פיירי 500ml", category: "ניקיון", image: "🧴" },
+  { barcode: "7290000055862", name: "אבקת כביסה ארגל 1 ק\"ג", category: "ניקיון", image: "🧴" },
+  { barcode: "7290000055879", name: "נוזל רצפה דטול 750ml", category: "ניקיון", image: "🧹" },
+  { barcode: "7290000055886", name: "נייר טואלט 32 יח' מגה", category: "ניקיון", image: "🧻" },
+  { barcode: "7290000055893", name: "מגבות נייר 3 יח' סנו", category: "ניקיון", image: "🧻" },
+  { barcode: "7290001083246", name: "חזה עוף טרי 1 ק\"ג", category: "בשר ועוף", image: "🍗" },
+  { barcode: "7290001083253", name: "שוקיים עוף טרי 1 ק\"ג", category: "בשר ועוף", image: "🍗" },
+  { barcode: "7290001083260", name: "בשר טחון בקר 15% 500g", category: "בשר ועוף", image: "🥩" },
+  { barcode: "7290000000001", name: "עגבניות שרי 500g", category: "פירות וירקות", image: "🍅" },
+  { barcode: "7290000000002", name: "מלפפון שדה 1 ק\"ג", category: "פירות וירקות", image: "🥒" },
+  { barcode: "7290000000003", name: "גזר 1 ק\"ג", category: "פירות וירקות", image: "🥕" },
+  { barcode: "7290000000004", name: "תפוח עץ גרנד 1 ק\"ג", category: "פירות וירקות", image: "🍎" },
+  { barcode: "7290000000005", name: "בננות 1 ק\"ג", category: "פירות וירקות", image: "🍌" },
+];
+
+const ramiLevyPrices = {
+  "7290000066690": 6.90, "7290000066683": 6.50, "7290000066720": 12.90,
+  "7290000066744": 12.90, "7290000066751": 8.90, "7290000066737": 6.90,
+  "7290000099131": 8.90, "7290002069403": 14.90, "7290104906107": 4.20,
+  "7290000268742": 7.90, "7290000268759": 9.90, "7290010928888": 5.90,
+  "7290010928895": 6.90, "7290000081597": 14.90, "7290000081580": 13.90,
+  "7290000064139": 9.90, "7290000064146": 29.90, "7290000064153": 7.90,
+  "7290000064160": 5.90, "7290000064177": 11.90, "7290000064184": 5.90,
+  "7290001257397": 2.90, "7290000051079": 4.90, "7290000051086": 5.90,
+  "7290000051093": 5.90, "7290011592476": 7.90, "7290011592483": 4.90,
+  "7290011592490": 5.90, "7290000857687": 7.90, "7290000857694": 7.90,
+  "7290000857700": 7.90, "7290013560003": 3.90, "7290013560010": 11.90,
+  "7290000857717": 7.90, "7290000071007": 6.90, "7290000071014": 6.90,
+  "7290000068021": 6.90, "7290000068007": 8.90, "7290000068014": 8.90,
+  "7290000093058": 29.90, "7290000093065": 39.90, "7290000093072": 19.90,
+  "7290000055855": 9.90, "7290000055862": 14.90, "7290000055879": 11.90,
+  "7290000055886": 29.90, "7290000055893": 14.90,
+  "7290001083246": 32.90, "7290001083253": 22.90, "7290001083260": 18.90,
+  "7290000000001": 8.90, "7290000000002": 4.90, "7290000000003": 3.90,
+  "7290000000004": 8.90, "7290000000005": 5.90,
+};
+
+const osherAdPrices = {
+  "7290000066690": 7.20, "7290000066683": 6.80, "7290000066720": 13.50,
+  "7290000066744": 13.50, "7290000066751": 9.50, "7290000066737": 7.20,
+  "7290000099131": 9.50, "7290002069403": 15.90, "7290104906107": 4.50,
+  "7290000268742": 8.50, "7290000268759": 10.90, "7290010928888": 6.20,
+  "7290010928895": 7.20, "7290000081597": 15.90, "7290000081580": 14.90,
+  "7290000064139": 10.50, "7290000064146": 31.90, "7290000064153": 8.20,
+  "7290000064160": 6.20, "7290000064177": 12.50, "7290000064184": 6.20,
+  "7290001257397": 3.20, "7290000051079": 5.20, "7290000051086": 6.20,
+  "7290000051093": 5.90, "7290011592476": 8.50, "7290011592483": 5.20,
+  "7290011592490": 6.20, "7290000857687": 8.50, "7290000857694": 8.50,
+  "7290000857700": 8.50, "7290013560003": 4.20, "7290013560010": 12.50,
+  "7290000857717": 8.20, "7290000071007": 7.50, "7290000071014": 7.50,
+  "7290000068021": 7.20,
+  // שוקולד עלית - אין באושר עד (רק ברמי לוי)
+  "7290000093058": 31.90, "7290000093065": 41.90, "7290000093072": 21.90,
+  "7290000055855": 10.50, "7290000055862": 15.90, "7290000055879": 12.50,
+  "7290000055886": 31.90, "7290000055893": 15.90,
+  "7290001083246": 34.90, "7290001083253": 24.90, "7290001083260": 19.90,
+  "7290000000001": 9.50, "7290000000002": 5.20, "7290000000003": 4.20,
+  "7290000000004": 9.50, "7290000000005": 6.20,
+};
+
+const regionalMultipliers = {
+  ramiLevy: { "tel-aviv":1.00,"jerusalem":0.97,"haifa":0.98,"beer-sheva":0.95,"rishon":0.99,"petah-tikva":0.99,"netanya":1.01,"ashdod":0.97,"rehovot":1.00,"holon":0.99 },
+  osherAd: { "tel-aviv":1.02,"jerusalem":0.98,"haifa":0.99,"beer-sheva":0.96,"rishon":1.00,"petah-tikva":1.00,"netanya":1.02,"ashdod":0.98,"rehovot":1.01,"holon":1.00 }
+};
+
+const regions = [
+  { id:"tel-aviv",name:"תל אביב והמרכז" },
+  { id:"jerusalem",name:"ירושלים" },
+  { id:"haifa",name:"חיפה והצפון" },
+  { id:"beer-sheva",name:"באר שבע והדרום" },
+  { id:"rishon",name:"ראשון לציון" },
+  { id:"petah-tikva",name:"פתח תקווה" },
+  { id:"netanya",name:"נתניה והשרון" },
+  { id:"ashdod",name:"אשדוד והשפלה" },
+  { id:"rehovot",name:"רחובות" },
+  { id:"holon",name:"חולון ובת ים" },
+];
+
+const similarProductsMap = {
+  "7290000068007": { barcode:"7290000068014", reason:"מוצר דומה - שוקולד עלית מוס, אלטרנטיבה מצוינת!" },
+  "7290000068014": { barcode:"7290000068007", reason:"מוצר דומה - שוקולד עלית מרקה, אלטרנטיבה מצוינת!" },
+};
+
+const categories = ["הכל", ...new Set(products.map(p => p.category))];
+
+function getPrice(barcode, store, region) {
+  const base = store === 'rami' ? ramiLevyPrices[barcode] : osherAdPrices[barcode];
+  if (!base) return null;
+  const m = store === 'rami'
+    ? (regionalMultipliers.ramiLevy[region] ?? 1)
+    : (regionalMultipliers.osherAd[region] ?? 1);
+  return +(base * m).toFixed(2);
+}
+
+function getAvailability(barcode) {
+  const inRami = !!ramiLevyPrices[barcode];
+  const inOsher = !!osherAdPrices[barcode];
+  if (inRami && inOsher) return 'both';
+  if (inRami) return 'ramiOnly';
+  if (inOsher) return 'osherOnly';
+  return 'none';
+}
+
+// ====== COMPONENTS ======
+
+function Toast({ toasts }) {
+  return (
+    <div className="toast-container">
+      {toasts.map(t => (
+        <div key={t.id} className={`toast ${t.type}`}>
+          <span className="toast-icon">{t.icon}</span>
+          <span>{t.message}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function AISuggestion({ item, onAccept, onDismiss }) {
+  const similar = similarProductsMap[item.barcode];
+  if (!similar) return null;
+  const alt = products.find(p => p.barcode === similar.barcode);
+  if (!alt) return null;
+
+  return (
+    <div className="ai-suggestion">
+      <div className="ai-header">
+        <span style={{fontSize:'20px'}}>🤖</span>
+        <span className="ai-title">המלצת AI</span>
+        <button className="ai-dismiss" onClick={onDismiss}>✕</button>
+      </div>
+      <p className="ai-text">
+        <strong>{item.name}</strong> לא נמצא בכל הסופרים.<br />
+        {similar.reason}<br />
+        <strong>{alt.name}</strong> {alt.image}
+      </p>
+      <button className="ai-accept-btn" onClick={() => onAccept(alt)}>
+        הוסף לסל → {alt.image} {alt.name}
+      </button>
+    </div>
+  );
+}
+
+function BarcodeScanner({ onScan, onClose }) {
+  const [manualInput, setManualInput] = useState('');
+  const [status, setStatus] = useState('init'); // init | scanning | error | noCam
+  const [errorMsg, setErrorMsg] = useState('');
+  const [cameras, setCameras] = useState([]);
+  const [selectedCamera, setSelectedCamera] = useState(null);
+  const videoRef = useRef(null);
+  const codeReaderRef = useRef(null);
+  const scannedRef = useRef(false);
+
+  useEffect(() => {
+    if (typeof ZXing === 'undefined') {
+      setStatus('noCam');
+      setErrorMsg('ספריית הסריקה לא נטענה');
+      return;
+    }
+    const codeReader = new ZXing.BrowserMultiFormatReader();
+    codeReaderRef.current = codeReader;
+
+    codeReader.listVideoInputDevices().then(devices => {
+      if (!devices || devices.length === 0) {
+        setStatus('noCam');
+        setErrorMsg('לא נמצאה מצלמה במכשיר');
+        return;
+      }
+      setCameras(devices);
+      // Prefer back camera on mobile
+      const back = devices.find(d =>
+        d.label.toLowerCase().includes('back') ||
+        d.label.toLowerCase().includes('rear') ||
+        d.label.toLowerCase().includes('אחורי') ||
+        d.label.toLowerCase().includes('environment')
+      );
+      const chosen = back || devices[devices.length - 1];
+      setSelectedCamera(chosen.deviceId);
+      startScanning(codeReader, chosen.deviceId);
+    }).catch(err => {
+      setStatus('error');
+      setErrorMsg('לא ניתן לגשת למצלמה: ' + err.message);
+    });
+
+    return () => {
+      try { codeReaderRef.current && codeReaderRef.current.reset(); } catch(e) {}
+    };
+  }, []);
+
+  const startScanning = (reader, deviceId) => {
+    setStatus('scanning');
+    scannedRef.current = false;
+    reader.decodeFromVideoDevice(deviceId, videoRef.current, (result, err) => {
+      if (result && !scannedRef.current) {
+        scannedRef.current = true;
+        // Vibrate on success if supported
+        if (navigator.vibrate) navigator.vibrate(100);
+        try { reader.reset(); } catch(e) {}
+        onScan(result.getText());
+      }
+    });
+  };
+
+  const handleSwitchCamera = () => {
+    if (cameras.length < 2) return;
+    const currentIdx = cameras.findIndex(c => c.deviceId === selectedCamera);
+    const nextIdx = (currentIdx + 1) % cameras.length;
+    const nextId = cameras[nextIdx].deviceId;
+    setSelectedCamera(nextId);
+    try { codeReaderRef.current && codeReaderRef.current.reset(); } catch(e) {}
+    const reader = new ZXing.BrowserMultiFormatReader();
+    codeReaderRef.current = reader;
+    startScanning(reader, nextId);
+  };
+
+  const handleManualSubmit = () => {
+    if (manualInput.trim()) {
+      try { codeReaderRef.current && codeReaderRef.current.reset(); } catch(e) {}
+      onScan(manualInput.trim());
+    }
+  };
+
+  return (
+    <div className="scanner-overlay">
+      <button className="scanner-close" onClick={onClose}>✕</button>
+
+      {status === 'scanning' && (
+        <>
+          <video
+            ref={videoRef}
+            style={{
+              position:'absolute', inset:0, width:'100%', height:'100%',
+              objectFit:'cover', opacity:0.85
+            }}
+            autoPlay playsInline muted
+          />
+          {/* Overlay frame */}
+          <div style={{position:'relative',zIndex:2,display:'flex',flexDirection:'column',alignItems:'center',width:'100%'}}>
+            <div className="scanner-frame" style={{marginTop:80}}>
+              <div className="scanner-line" />
+              <div style={{position:'absolute',top:0,left:0,width:24,height:24,borderTop:'3px solid #00c853',borderRight:'3px solid #00c853',borderRadius:'0 8px 0 0'}} />
+              <div style={{position:'absolute',top:0,right:0,width:24,height:24,borderTop:'3px solid #00c853',borderLeft:'3px solid #00c853',borderRadius:'8px 0 0 0'}} />
+              <div style={{position:'absolute',bottom:0,left:0,width:24,height:24,borderBottom:'3px solid #00c853',borderRight:'3px solid #00c853',borderRadius:'0 0 8px 0'}} />
+              <div style={{position:'absolute',bottom:0,right:0,width:24,height:24,borderBottom:'3px solid #00c853',borderLeft:'3px solid #00c853',borderRadius:'0 0 0 8px'}} />
+            </div>
+            <p className="scanner-text" style={{marginTop:20}}>📷 כוון את הברקוד למסגרת</p>
+            <p className="scanner-sub">הסריקה תתבצע אוטומטית</p>
+            {cameras.length > 1 && (
+              <button
+                onClick={handleSwitchCamera}
+                style={{background:'rgba(255,255,255,0.2)',border:'1px solid rgba(255,255,255,0.4)',color:'white',borderRadius:20,padding:'8px 16px',fontSize:13,cursor:'pointer',marginBottom:12}}
+              >🔄 החלף מצלמה</button>
+            )}
+          </div>
+        </>
+      )}
+
+      {(status === 'init') && (
+        <div style={{color:'white',textAlign:'center'}}>
+          <div className="spinner" style={{borderTopColor:'white',margin:'0 auto 16px'}} />
+          <p>מתחבר למצלמה...</p>
+        </div>
+      )}
+
+      {(status === 'error' || status === 'noCam') && (
+        <div style={{color:'white',textAlign:'center',padding:24}}>
+          <div style={{fontSize:48,marginBottom:12}}>📵</div>
+          <p style={{marginBottom:8,fontWeight:700}}>{errorMsg}</p>
+          <p style={{fontSize:13,opacity:0.75,marginBottom:20}}>
+            {status === 'error' ? 'אשר גישה למצלמה בדפדפן ונסה שוב' : 'הזן ברקוד ידנית'}
+          </p>
+        </div>
+      )}
+
+      {/* Manual fallback — always visible at bottom */}
+      <div style={{
+        position:'absolute', bottom:0, left:0, right:0, zIndex:10,
+        background:'rgba(0,0,0,0.7)', backdropFilter:'blur(8px)',
+        padding:'16px 20px 28px', borderRadius:'20px 20px 0 0'
+      }}>
+        <p style={{color:'rgba(255,255,255,0.7)',fontSize:12,textAlign:'center',marginBottom:10}}>
+          או הזן ברקוד ידנית
+        </p>
+        <div className="scanner-input-wrap" style={{margin:'0 auto'}}>
+          <input
+            className="scanner-input"
+            type="number"
+            placeholder="729000..."
+            value={manualInput}
+            onChange={e => setManualInput(e.target.value)}
+            onKeyDown={e => e.key === 'Enter' && handleManualSubmit()}
+          />
+          <button className="scanner-submit" onClick={handleManualSubmit}>חפש</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Cache for product images to avoid re-fetching
+const imageCache = {};
+
+function ProductImage({ barcode, emoji, size = 48 }) {
+  const [imgSrc, setImgSrc] = useState(imageCache[barcode] || null);
+  const [failed, setFailed] = useState(imageCache[barcode] === 'failed');
+
+  useEffect(() => {
+    if (imgSrc || failed) return;
+    // Open Food Facts — free, open barcode database with product images
+    const url = `https://world.openfoodfacts.org/api/v0/product/${barcode}.json`;
+    fetch(url)
+      .then(r => r.json())
+      .then(data => {
+        const src = data?.product?.image_front_small_url || data?.product?.image_small_url || data?.product?.image_url;
+        if (src) {
+          imageCache[barcode] = src;
+          setImgSrc(src);
+        } else {
+          imageCache[barcode] = 'failed';
+          setFailed(true);
+        }
+      })
+      .catch(() => {
+        imageCache[barcode] = 'failed';
+        setFailed(true);
+      });
+  }, [barcode]);
+
+  const boxStyle = {
+    width: size, height: size, borderRadius: 10, flexShrink: 0,
+    display: 'flex', alignItems: 'center', justifyContent: 'center',
+    background: 'var(--gray-100)', overflow: 'hidden', position: 'relative'
+  };
+
+  if (imgSrc) {
+    return (
+      <div style={boxStyle}>
+        <img
+          src={imgSrc}
+          alt=""
+          style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+          onError={() => { imageCache[barcode] = 'failed'; setImgSrc(null); setFailed(true); }}
+        />
+      </div>
+    );
+  }
+
+  // Fallback: emoji in styled box
+  return (
+    <div style={boxStyle}>
+      {!failed && !imgSrc && (
+        <div style={{
+          position:'absolute', inset:0, background:'var(--gray-100)',
+          display:'flex', alignItems:'center', justifyContent:'center'
+        }}>
+          <div style={{width:16,height:16,border:'2px solid var(--gray-300)',borderTopColor:'var(--green)',borderRadius:'50%',animation:'spin 0.8s linear infinite'}} />
+        </div>
+      )}
+      {failed && <span style={{fontSize: size * 0.55}}>{emoji}</span>}
+    </div>
+  );
+}
+
+function ProductResultItem({ product, onAdd, region }) {
+  const avail = getAvailability(product.barcode);
+  const ramiPrice = getPrice(product.barcode, 'rami', region);
+  const osherPrice = getPrice(product.barcode, 'osher', region);
+
+  return (
+    <div className="result-item">
+      <ProductImage barcode={product.barcode} emoji={product.image} size={48} />
+      <div className="result-info">
+        <div className="result-name">{product.name}</div>
+        <div className="badge-wrap">
+          {ramiPrice && <span className="badge badge-rami">רמי לוי ₪{ramiPrice}</span>}
+          {osherPrice && <span className="badge badge-osher">אושר עד ₪{osherPrice}</span>}
+          {avail !== 'both' && <span className="badge badge-only">⚠️ סופר אחד בלבד</span>}
+        </div>
+        <div className="result-barcode">{product.barcode}</div>
+      </div>
+      <button className="add-btn" onClick={() => onAdd(product)}>+</button>
+    </div>
+  );
+}
+
+function CartItemCard({ item, onRemove, onQtyChange, region, onDismissSuggestion, onAcceptSuggestion }) {
+  const avail = getAvailability(item.barcode);
+  const ramiPrice = getPrice(item.barcode, 'rami', region);
+  const osherPrice = getPrice(item.barcode, 'osher', region);
+  const isOnlyOne = avail !== 'both';
+  const hasSuggestion = isOnlyOne && similarProductsMap[item.barcode] && !item.suggestionDismissed;
+
+  return (
+    <div>
+      <div className={`cart-item ${isOnlyOne ? 'only-one' : ''}`}>
+        {isOnlyOne && <span className="only-badge">⚠️ סופר אחד בלבד</span>}
+        <ProductImage barcode={item.barcode} emoji={item.image} size={52} />
+        <div className="cart-info">
+          <div className="cart-name">{item.name}</div>
+          <div className="cart-prices">
+            {ramiPrice ? <span className="price-tag price-rami">רמי ₪{(ramiPrice * item.qty).toFixed(2)}</span>
+              : <span className="price-tag price-na">רמי —</span>}
+            {osherPrice ? <span className="price-tag price-osher">אושר ₪{(osherPrice * item.qty).toFixed(2)}</span>
+              : <span className="price-tag price-na">אושר —</span>}
+          </div>
+          <div className="qty-wrap" style={{marginTop:6}}>
+            <button className="qty-btn" onClick={() => onQtyChange(item.barcode, -1)}>−</button>
+            <span className="qty-num">{item.qty}</span>
+            <button className="qty-btn" onClick={() => onQtyChange(item.barcode, 1)}>+</button>
+          </div>
+        </div>
+        <button className="remove-btn" onClick={() => onRemove(item.barcode)}>🗑</button>
+      </div>
+      {hasSuggestion && (
+        <AISuggestion
+          item={item}
+          onAccept={onAcceptSuggestion}
+          onDismiss={() => onDismissSuggestion(item.barcode)}
+        />
+      )}
+    </div>
+  );
+}
+
+function SearchTab({ region, addToCart }) {
+  const [query, setQuery] = useState('');
+  const [activeCategory, setActiveCategory] = useState('הכל');
+  const [showScanner, setShowScanner] = useState(false);
+  const [barcodeInput, setBarcodeInput] = useState('');
+
+  const filtered = products.filter(p => {
+    const matchCat = activeCategory === 'הכל' || p.category === activeCategory;
+    const matchQ = !query || p.name.toLowerCase().includes(query.toLowerCase()) || p.barcode.includes(query);
+    return matchCat && matchQ;
+  });
+
+  const handleScan = (barcode) => {
+    const p = products.find(prod => prod.barcode === barcode);
+    if (p) { addToCart(p); setShowScanner(false); }
+    else { alert('מוצר לא נמצא בברקוד: ' + barcode); }
+  };
+
+  const handleBarcodeSearch = () => {
+    if (!barcodeInput.trim()) return;
+    const p = products.find(prod => prod.barcode === barcodeInput.trim());
+    if (p) { addToCart(p); setBarcodeInput(''); }
+    else { alert('מוצר לא נמצא'); }
+  };
+
+  return (
+    <div className="content">
+      {showScanner && <BarcodeScanner onScan={handleScan} onClose={() => setShowScanner(false)} />}
+
+      <div className="barcode-row">
+        <input
+          className="barcode-field"
+          type="number"
+          placeholder="הכנס ברקוד..."
+          value={barcodeInput}
+          onChange={e => setBarcodeInput(e.target.value)}
+          onKeyDown={e => e.key === 'Enter' && handleBarcodeSearch()}
+        />
+        <button className="barcode-go" onClick={handleBarcodeSearch}>חפש</button>
+        <button
+          style={{background:'#1565c0',color:'white',border:'none',borderRadius:'50%',width:44,height:44,fontSize:20,cursor:'pointer',flexShrink:0}}
+          onClick={() => setShowScanner(true)}
+          title="סרוק ברקוד"
+        >📷</button>
+      </div>
+
+      <div className="cat-scroll">
+        {categories.map(c => (
+          <button key={c} className={`cat-chip ${activeCategory === c ? 'active' : ''}`} onClick={() => setActiveCategory(c)}>{c}</button>
+        ))}
+      </div>
+
+      {filtered.length > 0 ? (
+        <div className="search-results">
+          {filtered.map(p => (
+            <ProductResultItem key={p.barcode} product={p} onAdd={addToCart} region={region} />
+          ))}
+        </div>
+      ) : (
+        <div className="no-results">
+          <div style={{fontSize:40,marginBottom:12}}>🔍</div>
+          <div>לא נמצאו מוצרים תואמים</div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function CartTab({ cart, region, onRemove, onQtyChange, onDismissSuggestion, onAcceptSuggestion }) {
+  const ramiTotal = cart.reduce((sum, item) => {
+    const p = getPrice(item.barcode, 'rami', region);
+    return sum + (p ? p * item.qty : 0);
+  }, 0);
+
+  const osherTotal = cart.reduce((sum, item) => {
+    const p = getPrice(item.barcode, 'osher', region);
+    return sum + (p ? p * item.qty : 0);
+  }, 0);
+
+  const ramiCoverage = cart.filter(i => getPrice(i.barcode, 'rami', region) !== null).length;
+  const osherCoverage = cart.filter(i => getPrice(i.barcode, 'osher', region) !== null).length;
+
+  const winner = ramiTotal > 0 && osherTotal > 0
+    ? (ramiTotal <= osherTotal ? 'rami' : 'osher')
+    : ramiTotal > 0 ? 'rami' : 'osher';
+
+  const saving = Math.abs(ramiTotal - osherTotal).toFixed(2);
+
+  if (cart.length === 0) {
+    return (
+      <div className="content">
+        <div className="empty-state">
+          <div className="empty-emoji">🛒</div>
+          <div className="empty-title">הסל ריק</div>
+          <div className="empty-text">עבור ל"חיפוש" כדי להוסיף מוצרים לסל שלך</div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="content">
+      {cart.length > 0 && (
+        <div className="summary-card">
+          <div className="summary-title">📊 השוואת מחירים לסל שלך</div>
+          <div className="summary-row">
+            <div className="summary-store">
+              <span className="store-icon">🟢</span>
+              <div>
+                <div className="store-name">רמי לוי</div>
+                <div className="store-sub">{ramiCoverage}/{cart.length} מוצרים זמינים</div>
+              </div>
+            </div>
+            <div className={`total-price total-rami ${winner === 'rami' ? 'price-best' : ''}`}>
+              ₪{ramiTotal.toFixed(2)}
+              {winner === 'rami' && <span style={{fontSize:14,marginRight:4}}>🏆</span>}
+            </div>
+          </div>
+          <div className="divider" />
+          <div className="summary-row">
+            <div className="summary-store">
+              <span className="store-icon">🔵</span>
+              <div>
+                <div className="store-name">אושר עד</div>
+                <div className="store-sub">{osherCoverage}/{cart.length} מוצרים זמינים</div>
+              </div>
+            </div>
+            <div className={`total-price total-osher ${winner === 'osher' ? 'price-best' : ''}`}>
+              ₪{osherTotal.toFixed(2)}
+              {winner === 'osher' && <span style={{fontSize:14,marginRight:4}}>🏆</span>}
+            </div>
+          </div>
+          {ramiTotal > 0 && osherTotal > 0 && (
+            <div className="winner-banner">
+              {winner === 'rami' ? '🟢 רמי לוי זול יותר' : '🔵 אושר עד זול יותר'}
+              <div className="savings">חיסכון של ₪{saving} לעומת הסופר היקר יותר</div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {cart.map(item => (
+        <CartItemCard
+          key={item.barcode}
+          item={item}
+          region={region}
+          onRemove={onRemove}
+          onQtyChange={onQtyChange}
+          onDismissSuggestion={onDismissSuggestion}
+          onAcceptSuggestion={onAcceptSuggestion}
+        />
+      ))}
+    </div>
+  );
+}
+
+// ====== SMART SEARCH ENGINE ======
+
+// English ↔ Hebrew keyword map for cross-language search
+const engHeMap = {
+  'milk': 'חלב', 'bread': 'לחם', 'egg': 'ביצ', 'eggs': 'ביצ',
+  'cheese': 'גבינ', 'butter': 'חמאה', 'yogurt': 'יוגורט', 'cream': 'שמנת',
+  'water': 'מים', 'cola': 'קולה', 'juice': 'נקטר', 'coffee': 'קפה',
+  'tea': 'תה', 'sugar': 'סוכר', 'flour': 'קמח', 'rice': 'אורז',
+  'pasta': 'פסטה', 'salt': 'מלח', 'oil': 'שמן', 'olive': 'זית',
+  'tuna': 'טונה', 'corn': 'תירס', 'tomato': 'עגבני', 'carrot': 'גזר',
+  'cucumber': 'מלפפון', 'apple': 'תפוח', 'banana': 'בננ',
+  'chicken': 'עוף', 'beef': 'בקר', 'meat': 'בשר',
+  'snack': 'חטיף', 'chips': 'ביסלי', 'chocolate': 'שוקולד',
+  'soap': 'סבון', 'detergent': 'ארגל', 'toilet': 'טואלט', 'paper': 'נייר',
+  'pita': 'פית', 'roll': 'לחמני', 'cottage': "קוטג'",
+  'nescafe': 'נס קפה', 'sprite': 'ספרייט', 'eden': 'עדן',
+  'bambah': 'במבה', 'bamba': 'במבה', 'bisli': 'ביסלי',
+  'pro': '', // generic, let other terms carry weight
+};
+
+// Tokenize query into words
+function tokenize(q) {
+  return q.toLowerCase().trim().split(/\s+/).filter(Boolean);
+}
+
+// Score a product against query tokens — higher = better match
+function scoreProduct(product, tokens) {
+  const name = product.name.toLowerCase();
+  const cat = product.category.toLowerCase();
+  let score = 0;
+  let matchedTokens = 0;
+
+  for (const token of tokens) {
+    if (!token || token.length < 1) continue;
+
+    // Translate English token to Hebrew if in map
+    const heToken = engHeMap[token] || token;
+
+    // Exact word start in name (best)
+    if (name.startsWith(heToken) || name.includes(' ' + heToken)) { score += 10; matchedTokens++; continue; }
+    // Substring in name
+    if (name.includes(heToken)) { score += 7; matchedTokens++; continue; }
+    // Category match
+    if (cat.includes(heToken)) { score += 4; matchedTokens++; continue; }
+    // Barcode match
+    if (product.barcode.includes(token)) { score += 15; matchedTokens++; continue; }
+    // Original English token in name (brand names etc)
+    if (name.includes(token)) { score += 6; matchedTokens++; continue; }
+    // Partial fuzzy: token is prefix of any name word
+    const nameWords = name.split(/[\s\-'"%]+/);
+    if (nameWords.some(w => w.startsWith(heToken) || w.startsWith(token))) { score += 5; matchedTokens++; continue; }
+    // Very short tokens (1-2 chars) — partial match
+    if (token.length <= 2 && (name.includes(token) || cat.includes(token))) { score += 2; matchedTokens++; }
+  }
+
+  // Bonus: all tokens matched
+  if (matchedTokens === tokens.length && tokens.length > 1) score += 5;
+  return score;
+}
+
+// Highlight matched parts of a product name given query
+function highlightName(name, query) {
+  if (!query.trim()) return name;
+  const tokens = tokenize(query);
+  let result = name;
+  // Build all terms to highlight (Hebrew translated + original)
+  const terms = [];
+  for (const t of tokens) {
+    if (t.length < 2) continue;
+    terms.push(t);
+    const he = engHeMap[t];
+    if (he && he.length > 1) terms.push(he);
+  }
+  // Sort longest first so we don't double-highlight
+  terms.sort((a, b) => b.length - a.length);
+  // Replace with <mark> tags
+  for (const term of terms) {
+    const escaped = term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    result = result.replace(new RegExp(escaped, 'gi'), m => `§§§${m}§§§`);
+  }
+  // Split and render
+  return result.split('§§§').map((part, i) =>
+    i % 2 === 1
+      ? React.createElement('mark', { key: i }, part)
+      : part
+  );
+}
+
+function getSmartResults(query, maxResults = 8) {
+  if (!query || query.trim().length < 1) return [];
+  const tokens = tokenize(query);
+  const scored = products
+    .map(p => ({ product: p, score: scoreProduct(p, tokens) }))
+    .filter(x => x.score > 0)
+    .sort((a, b) => b.score - a.score);
+  return scored.slice(0, maxResults).map(x => x.product);
+}
+
+// ====== AUTOCOMPLETE IMAGE (cached per barcode) ======
+const acImageCache = {};
+
+function AcImage({ barcode, emoji }) {
+  const [src, setSrc] = useState(acImageCache[barcode] || null);
+  const [failed, setFailed] = useState(acImageCache[barcode] === 'failed');
+
+  useEffect(() => {
+    if (src || failed) return;
+    fetch(`https://world.openfoodfacts.org/api/v0/product/${barcode}.json`)
+      .then(r => r.json())
+      .then(data => {
+        const url = data?.product?.image_front_small_url || data?.product?.image_small_url;
+        if (url) { acImageCache[barcode] = url; setSrc(url); }
+        else { acImageCache[barcode] = 'failed'; setFailed(true); }
+      })
+      .catch(() => { acImageCache[barcode] = 'failed'; setFailed(true); });
+  }, [barcode]);
+
+  if (src) return <img src={src} alt="" style={{width:'100%',height:'100%',objectFit:'contain'}} onError={() => { setFailed(true); setSrc(null); }} />;
+  if (failed) return <span style={{fontSize:22}}>{emoji}</span>;
+  return <div style={{width:14,height:14,border:'2px solid var(--gray-300)',borderTopColor:'var(--green)',borderRadius:'50%',animation:'spin 0.8s linear infinite'}} />;
+}
+
+// ====== SMART SEARCH BAR ======
+function SmartSearchBar({ onAddToCart, region }) {
+  const [query, setQuery] = useState('');
+  const [open, setOpen] = useState(false);
+  const [highlighted, setHighlighted] = useState(-1);
+  const [showScanner, setShowScanner] = useState(false);
+  const wrapRef = useRef(null);
+  const inputRef = useRef(null);
+  const debounceRef = useRef(null);
+
+  const [results, setResults] = useState([]);
+
+  // Debounced search
+  useEffect(() => {
+    clearTimeout(debounceRef.current);
+    if (query.trim().length < 1) { setResults([]); setOpen(false); return; }
+    debounceRef.current = setTimeout(() => {
+      const r = getSmartResults(query, 8);
+      setResults(r);
+      setOpen(r.length > 0);
+      setHighlighted(-1);
+    }, 120);
+    return () => clearTimeout(debounceRef.current);
+  }, [query]);
+
+  // Close on outside click
+  useEffect(() => {
+    const handler = e => { if (wrapRef.current && !wrapRef.current.contains(e.target)) setOpen(false); };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
+
+  const handleSelect = (product) => {
+    onAddToCart(product);
+    setQuery('');
+    setOpen(false);
+    setHighlighted(-1);
+    inputRef.current?.focus();
+  };
+
+  const handleKeyDown = (e) => {
+    if (!open) return;
+    if (e.key === 'ArrowDown') { e.preventDefault(); setHighlighted(h => Math.min(h + 1, results.length - 1)); }
+    else if (e.key === 'ArrowUp') { e.preventDefault(); setHighlighted(h => Math.max(h - 1, -1)); }
+    else if (e.key === 'Enter' && highlighted >= 0) { e.preventDefault(); handleSelect(results[highlighted]); }
+    else if (e.key === 'Escape') { setOpen(false); setHighlighted(-1); }
+  };
+
+  const handleScan = (barcode) => {
+    const p = products.find(prod => prod.barcode === barcode);
+    if (p) { onAddToCart(p); setShowScanner(false); }
+    else { alert('מוצר לא נמצא בברקוד: ' + barcode); setShowScanner(false); }
+  };
+
+  return (
+    <>
+      {showScanner && <BarcodeScanner onScan={handleScan} onClose={() => setShowScanner(false)} />}
+      <div className="smart-search-wrap" ref={wrapRef}>
+        <div style={{display:'flex',gap:8,alignItems:'center'}}>
+          {/* Text search */}
+          <div style={{flex:1,position:'relative'}}>
+            <span style={{position:'absolute',right:13,top:'50%',transform:'translateY(-50%)',fontSize:17,color:'var(--gray-400)',pointerEvents:'none',zIndex:1}}>🔍</span>
+            <input
+              ref={inputRef}
+              type="text"
+              placeholder="חפש מוצר... (עברית / English)"
+              value={query}
+              onChange={e => setQuery(e.target.value)}
+              onFocus={() => results.length > 0 && setOpen(true)}
+              onKeyDown={handleKeyDown}
+              style={{
+                width:'100%', padding:'11px 40px 11px 12px', borderRadius:'var(--radius-full)',
+                border:'1.5px solid var(--gray-300)', fontFamily:'Heebo,sans-serif', fontSize:14,
+                color:'var(--gray-900)', outline:'none', background:'white',
+                transition:'border-color 0.15s, box-shadow 0.15s',
+              }}
+              onFocus={e => { e.target.style.borderColor='var(--green)'; e.target.style.boxShadow='0 0 0 3px rgba(0,200,83,0.12)'; if(results.length>0) setOpen(true); }}
+              onBlur={e => { e.target.style.borderColor='var(--gray-300)'; e.target.style.boxShadow='none'; }}
+            />
+          </div>
+          {/* Camera / barcode */}
+          <button
+            onClick={() => setShowScanner(true)}
+            style={{background:'#1565c0',color:'white',border:'none',borderRadius:'50%',width:44,height:44,fontSize:20,cursor:'pointer',flexShrink:0,display:'flex',alignItems:'center',justifyContent:'center',boxShadow:'0 2px 8px rgba(21,101,192,0.3)'}}
+            title="סרוק ברקוד"
+          >📷</button>
+        </div>
+
+        {/* Dropdown */}
+        {open && (
+          <div className="autocomplete-dropdown">
+            <div className="autocomplete-header">
+              {results.length} תוצאות עבור "{query}"
+            </div>
+            {results.length === 0 ? (
+              <div className="ac-no-results">לא נמצאו מוצרים תואמים</div>
+            ) : (
+              results.map((p, i) => {
+                const avail = getAvailability(p.barcode);
+                const ramiP = getPrice(p.barcode, 'rami', region);
+                const osherP = getPrice(p.barcode, 'osher', region);
+                return (
+                  <div
+                    key={p.barcode}
+                    className={`autocomplete-item ${highlighted === i ? 'highlighted' : ''}`}
+                    onMouseEnter={() => setHighlighted(i)}
+                    onMouseLeave={() => setHighlighted(-1)}
+                    onClick={() => handleSelect(p)}
+                  >
+                    <div className="ac-img">
+                      <AcImage barcode={p.barcode} emoji={p.image} />
+                    </div>
+                    <div className="ac-info">
+                      <div className="ac-name">{highlightName(p.name, query)}</div>
+                      <div className="ac-meta">
+                        <span className="ac-cat">{p.category}</span>
+                        {ramiP && <span className="ac-price-rami">רמי ₪{ramiP}</span>}
+                        {osherP && <span className="ac-price-osher">אושר ₪{osherP}</span>}
+                        {avail !== 'both' && <span className="ac-only">⚠️ סופר אחד</span>}
+                      </div>
+                    </div>
+                    <button
+                      className="ac-add"
+                      onClick={e => { e.stopPropagation(); handleSelect(p); }}
+                      title="הוסף לסל"
+                    >+</button>
+                  </div>
+                );
+              })
+            )}
+          </div>
+        )}
+      </div>
+    </>
+  );
+}
+
+// ====== MAIN APP ======
+function App() {
+  const [tab, setTab] = useState('search');
+  const [region, setRegion] = useState('tel-aviv');
+  const [cart, setCart] = useState([]);
+  const [toasts, setToasts] = useState([]);
+  const toastId = useRef(0);
+
+  const showToast = (message, type = 'default', icon = 'ℹ️') => {
+    const id = ++toastId.current;
+    setToasts(prev => [...prev, { id, message, type, icon }]);
+    setTimeout(() => setToasts(prev => prev.filter(t => t.id !== id)), 3200);
+  };
+
+  const addToCart = (product) => {
+    const avail = getAvailability(product.barcode);
+    const existing = cart.find(i => i.barcode === product.barcode);
+
+    if (existing) {
+      setCart(prev => prev.map(i => i.barcode === product.barcode ? { ...i, qty: i.qty + 1 } : i));
+      showToast(`כמות עודכנה: ${product.name}`, 'success', '✅');
+    } else {
+      setCart(prev => [...prev, { ...product, qty: 1, suggestionDismissed: false }]);
+
+      if (avail === 'ramiOnly') {
+        showToast(`⚠️ ${product.name} נמצא רק ברמי לוי! בדוק אלטרנטיבה באושר עד`, 'warning', '⚠️');
+      } else if (avail === 'osherOnly') {
+        showToast(`⚠️ ${product.name} נמצא רק באושר עד! בדוק אלטרנטיבה ברמי לוי`, 'warning', '⚠️');
+      } else {
+        showToast(`${product.name} נוסף לסל`, 'success', '✅');
+      }
+    }
+  };
+
+  const removeFromCart = (barcode) => {
+    setCart(prev => prev.filter(i => i.barcode !== barcode));
+    showToast('מוצר הוסר מהסל', 'default', '🗑️');
+  };
+
+  const changeQty = (barcode, delta) => {
+    setCart(prev => prev.map(i => {
+      if (i.barcode !== barcode) return i;
+      const newQty = i.qty + delta;
+      return newQty <= 0 ? null : { ...i, qty: newQty };
+    }).filter(Boolean));
+  };
+
+  const dismissSuggestion = (barcode) => {
+    setCart(prev => prev.map(i => i.barcode === barcode ? { ...i, suggestionDismissed: true } : i));
+  };
+
+  const acceptSuggestion = (altProduct) => {
+    addToCart(altProduct);
+    showToast(`🤖 מוצר מוצע נוסף: ${altProduct.name}`, 'success', '🤖');
+  };
+
+  const cartCount = cart.reduce((s, i) => s + i.qty, 0);
+
+  return (
+    <>
+      <Toast toasts={toasts} />
+      <div id="app">
+        {/* Header */}
+        <div className="header">
+          <div className="header-top">
+            <span className="header-logo">🛒</span>
+            <div>
+              <div className="header-title">סל חכם</div>
+              <div className="header-subtitle">השוואת מחירים · רמי לוי · אושר עד</div>
+            </div>
+          </div>
+          {tab === 'search' && (
+            <SmartSearchBar onAddToCart={addToCart} region={region} />
+          )}
+        </div>
+
+        {/* Region */}
+        <div style={{padding:'12px 16px 0', background:'white'}}>
+          <div className="region-card">
+            <span style={{fontSize:20}}>📍</span>
+            <span className="region-label">אזור:</span>
+            <select className="region-select" value={region} onChange={e => setRegion(e.target.value)}>
+              {regions.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}
+            </select>
+          </div>
+        </div>
+
+        {/* Tabs */}
+        <div className="tabs">
+          <button className={`tab ${tab === 'search' ? 'active' : ''}`} onClick={() => setTab('search')}>
+            <span className="tab-icon">🔍</span>חיפוש מוצרים
+          </button>
+          <button className={`tab ${tab === 'cart' ? 'active' : ''}`} onClick={() => setTab('cart')}>
+            <span className="tab-icon">🛒</span>הסל שלי {cartCount > 0 && `(${cartCount})`}
+          </button>
+        </div>
+
+        {/* Content */}
+        {tab === 'search' ? (
+          <SearchTabWithQuery region={region} addToCart={addToCart} />
+        ) : (
+          <CartTab
+            cart={cart}
+            region={region}
+            onRemove={removeFromCart}
+            onQtyChange={changeQty}
+            onDismissSuggestion={dismissSuggestion}
+            onAcceptSuggestion={acceptSuggestion}
+          />
+        )}
+      </div>
+    </>
+  );
+}
+
+function SearchTabWithQuery({ region, addToCart }) {
+  const [activeCategory, setActiveCategory] = useState('הכל');
+  const [showScanner, setShowScanner] = useState(false);
+
+  const filtered = products.filter(p =>
+    activeCategory === 'הכל' || p.category === activeCategory
+  );
+
+  const handleScan = (barcode) => {
+    const p = products.find(prod => prod.barcode === barcode);
+    if (p) { addToCart(p); setShowScanner(false); }
+    else { alert('מוצר לא נמצא בברקוד: ' + barcode); setShowScanner(false); }
+  };
+
+  return (
+    <div className="content">
+      {showScanner && <BarcodeScanner onScan={handleScan} onClose={() => setShowScanner(false)} />}
+
+      <div style={{marginBottom:8,color:'var(--gray-500)',fontSize:12,textAlign:'center'}}>
+        💡 חפש בעברית או באנגלית — למשל <strong>"חלב"</strong>, <strong>"bisli"</strong>, <strong>"pita"</strong>
+      </div>
+
+      <div className="cat-scroll">
+        {categories.map(c => (
+          <button key={c} className={`cat-chip ${activeCategory === c ? 'active' : ''}`} onClick={() => setActiveCategory(c)}>{c}</button>
+        ))}
+      </div>
+
+      <div className="search-results">
+        {filtered.slice(0, 40).map(p => (
+          <ProductResultItem key={p.barcode} product={p} onAdd={addToCart} region={region} />
+        ))}
+        {filtered.length > 40 && (
+          <div style={{padding:'12px 16px',color:'var(--gray-500)',fontSize:13,textAlign:'center'}}>
+            ועוד {filtered.length - 40} מוצרים... השתמש בחיפוש למעלה
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+ReactDOM.render(<App />, document.getElementById('root'));
+</script>
+</body>
+</html>
